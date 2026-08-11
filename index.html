@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cusater的博客</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==================== 头部导航 ==================== -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="site-title" onclick="navigateTo('/')" title="回到首页">
+                我的个人博客
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a id="nav-posts" onclick="navigateTo('/')" class="active">文章</a></li>
+                    <li><a id="nav-about" onclick="navigateTo('/about')">关于</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main class="main-content" id="main-content">
+        
+    </main>
+
+    
+    <footer class="site-footer">
+        <p>© 2026 Edit by Cusater <span class="footer-heart">♥</span></p>
+    </footer>
+    <script src="posts-data.js"></script>
+    <script>
+        (function() {
+            const mainContent = document.getElementById('main-content');
+            const navPosts = document.getElementById('nav-posts');
+            const navAbout = document.getElementById('nav-about');
+            function getCurrentRoute() {
+                const hash = window.location.hash.slice(1) || '/';
+                return hash;
+            }
+
+            function parseRoute(route) {
+                if (route === '/about') {
+                    return { page: 'about' };
+                }
+                // 默认首页 - 文章列表
+                return { page: 'posts' };
+            }
+
+            function navigateTo(path) {
+                if (path && (path.endsWith('.html') || path.startsWith('articles/'))) {
+                    window.location.href = path;
+                } else {
+                    window.location.hash = path;
+                }
+            }
+
+            function updateNavActive(page) {
+                navPosts.classList.remove('active');
+                navAbout.classList.remove('active');
+                if (page === 'about') {
+                    navAbout.classList.add('active');
+                } else {
+                    navPosts.classList.add('active');
+                }
+            }
+
+            function renderPostsList() {
+                updateNavActive('posts');
+                let postsHTML = articles
+                    .map(
+                        (article) => `
+                    <article class="post-card" onclick="navigateTo('${article.link}')" title="阅读全文">
+                        <span class="post-date">${article.date}</span>
+                        <h2 class="post-title">${article.title}</h2>
+                        <p class="post-excerpt">${article.excerpt}</p>
+                        <div class="post-tags">
+                            ${article.tags.map((tag) => `<span class="post-tag">#${tag}</span>`).join('')}
+                        </div>
+                        <span class="card-arrow">→</span>
+                    </article>
+                `
+                    )
+                    .join('');
+
+                mainContent.innerHTML = `
+                    <h1 class="page-title">文章</h1>
+                    <p class="page-subtitle">共 ${articles.length} 篇文章 · 记录我的科研成果</p>
+                    <div class="posts-list">
+                        ${postsHTML}
+                    </div>
+                `;
+            }
+
+            function renderAboutPage() {
+                updateNavActive('about');
+                mainContent.innerHTML = `
+                    <div class="about-card">
+                        <img class="about-avatar" src="avatar.jpg" alt="Cusater的头像">
+                        <h2 class="about-name">Cusater</h2>
+                        <hr class="about-divider">
+                        <div class="about-text">
+                            性别：男
+                            <br>
+年龄：15<br>
+MBTI：INFJ<br>
+身高：176cm<br>
+身材：偏瘦<br>
+性格：内向，喜欢独处<br>
+爱好：陈奕迅，打球，写小作文，写小诗，出去玩，写代码，科研<br>
+去过的地方：北京，上海，广州，珠海，阳江，惠州，深圳，澳门，广西，云南，黑龙江，吉林，辽宁，湖南，湖北，泰国，韩国，新加坡，马来西亚<br>
+喜欢的英雄：守约，墨子<br>
+科研成果:高输出低经济辅助守约，肉装守约<br>
+
+<h3>背景故事：</h3>
+这个男生今年15岁，性格内向不爱扎堆，平时更喜欢一个人待着，个子176cm，身形偏瘦。
+平时爱好特别丰富：爱听陈奕迅的歌，有空就去打球，喜欢写写随笔、小诗，也爱出门旅游，还会敲代码、研究些新奇东西。
+国内好多省份城市他都去过，还跑过泰国、韩国、新加坡、马来西亚好几个国家，见了不少世面。
+打王者荣耀就爱玩百里守约和墨子，别人玩守约大多老老实实走射手位，他偏爱琢磨不一样的套路，自己研究出两套奇葩玩法：经济不高也能打出高额伤害的辅助守约，还有堆肉装的守约，算是自己摸索出来的独门打法。
+平时不爱凑热闹，日常消遣就是听歌、运动、写点东西、出门散心、敲代码，打游戏也不爱跟风大众出装，就爱自己研究小众思路，看着安静话不多，心里想法特别多
+                        </div>
+                        <div class="about-skills">
+                            <span class="about-skill-tag">王者荣耀</span>
+                            <span class="about-skill-tag">Minecraft</span>
+                            <span class="about-skill-tag">阅读</span>
+                            <span class="about-skill-tag">写作</span>
+                        </div>
+                    </div>
+                `;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            function handleRoute() {
+                const route = getCurrentRoute();
+                const parsed = parseRoute(route);
+
+                switch (parsed.page) {
+                    case 'posts':
+                        renderPostsList();
+                        break;
+                    case 'about':
+                        renderAboutPage();
+                        break;
+                    default:
+                        renderPostsList();
+                }
+            }
+            window.addEventListener('hashchange', handleRoute);
+            window.addEventListener('DOMContentLoaded', handleRoute);
+            window.navigateTo = navigateTo;
+        })();
+    </script>
+</body>
+</html>
