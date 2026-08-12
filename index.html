@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cusater的博客</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script>
+        // 在样式应用前同步设置主题，避免页面加载时出现主题闪烁
+        (function() {
+            try {
+                var saved = localStorage.getItem('theme');
+                if (saved === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body>
     <header class="site-header">
@@ -12,13 +24,20 @@
             <a class="site-title" onclick="navigateTo('/')" title="回到首页">
                 我的个人博客
             </a>
-            <nav>
-                <ul class="nav-links">
-                    <li><a id="nav-posts" onclick="navigateTo('/')" class="active">文章</a></li>
-                    <li><a id="nav-about" onclick="navigateTo('/about')">关于</a></li>
-                    <li><a id="nav-github" href="https://github.com/Cusater" target="_blank">Github</a></li>
-                </ul>
-            </nav>
+            <div class="header-right">
+                <nav>
+                    <ul class="nav-links">
+                        <li><a id="nav-posts" onclick="navigateTo('/')" class="active">文章</a></li>
+                        <li><a id="nav-archives" onclick="navigateTo('/archives')">归档</a></li>
+                        <li><a id="nav-about" onclick="navigateTo('/about')">关于</a></li>
+                        <li><a id="nav-github" href="https://github.com/Cusater" target="_blank">Github</a></li>
+                    </ul>
+                </nav>
+                <button id="theme-toggle" class="theme-toggle" type="button" title="切换主题" aria-label="切换主题">
+                    <span class="icon-moon">D</span>
+                    <span class="icon-sun">L</span>
+                </button>
+            </div>
         </div>
     </header>
     <main class="main-content" id="main-content">
@@ -35,7 +54,13 @@
         (function() {
             const mainContent = document.getElementById('main-content');
             const navPosts = document.getElementById('nav-posts');
+            const navArchives = document.getElementById('nav-archives');
             const navAbout = document.getElementById('nav-about');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // 保留当前搜索关键词，切回文章页时恢复
+            let currentSearchKeyword = '';
+
             function getCurrentRoute() {
                 const hash = window.location.hash.slice(1) || '/';
                 return hash;
@@ -44,6 +69,9 @@
             function parseRoute(route) {
                 if (route === '/about') {
                     return { page: 'about' };
+                }
+                if (route === '/archives') {
+                    return { page: 'archives' };
                 }
                 return { page: 'posts' };
             }
@@ -58,39 +86,193 @@
 
             function updateNavActive(page) {
                 navPosts.classList.remove('active');
+                navArchives.classList.remove('active');
                 navAbout.classList.remove('active');
                 if (page === 'about') {
                     navAbout.classList.add('active');
+                } else if (page === 'archives') {
+                    navArchives.classList.add('active');
                 } else {
                     navPosts.classList.add('active');
                 }
             }
 
-            function renderPostsList() {
-                updateNavActive('posts');
-                let postsHTML = articles
-                    .map(
-                        (article) => `
+            // ========== 主题切换 ==========
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            }
+            function toggleTheme() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const next = isDark ? 'light' : 'dark';
+                applyTheme(next);
+                try { localStorage.setItem('theme', next); } catch (e) {}
+            }
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // ========== 文章搜索 ==========
+            function escapeHtml(s) {
+                return String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function highlight(text, keyword) {
+                const safe = escapeHtml(text);
+                if (!keyword) return safe;
+                const kw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return safe.replace(new RegExp(kw, 'gi'), (m) => '<mark>' + m + '</mark>');
+            }
+
+            function filterArticles(keyword) {
+                const kw = keyword.trim().toLowerCase();
+                if (!kw) return articles.slice();
+                return articles.filter((a) => {
+                    const hay = [a.title, a.excerpt, (a.tags || []).join(' '), a.date]
+                        .join(' ')
+                        .toLowerCase();
+                    return hay.indexOf(kw) !== -1;
+                });
+            }
+
+            function renderPostCard(article, keyword) {
+                return `
                     <article class="post-card" onclick="navigateTo('${article.link}')" title="阅读全文">
-                        <span class="post-date">${article.date}</span>
-                        <h2 class="post-title">${article.title}</h2>
-                        <p class="post-excerpt">${article.excerpt}</p>
+                        <span class="post-date">${escapeHtml(article.date)}</span>
+                        <h2 class="post-title">${highlight(article.title, keyword)}</h2>
+                        <p class="post-excerpt">${highlight(article.excerpt, keyword)}</p>
                         <div class="post-tags">
-                            ${article.tags.map((tag) => `<span class="post-tag">#${tag}</span>`).join('')}
+                            ${article.tags.map((tag) => `<span class="post-tag">#${escapeHtml(tag)}</span>`).join('')}
                         </div>
                         <span class="card-arrow">→</span>
                     </article>
-                `
-                    )
-                    .join('');
+                `;
+            }
+
+            function renderPostsList() {
+                updateNavActive('posts');
+                const keyword = currentSearchKeyword;
+                const filtered = filterArticles(keyword);
 
                 mainContent.innerHTML = `
                     <h1 class="page-title">文章</h1>
                     <p class="page-subtitle">共 ${articles.length} 篇文章 · 记录我的科研成果</p>
-                    <div class="posts-list">
-                        ${postsHTML}
+                    <div class="search-box">
+                        <span class="search-icon"><i class="fa fa-search"></i></span>
+                        <input id="search-input" class="search-input" type="text"
+                               placeholder="搜索文章标题、摘要或标签…"
+                               value="${escapeHtml(keyword)}" autocomplete="off">
+                        <button id="search-clear" class="search-clear${keyword ? ' visible' : ''}" type="button" title="清空" aria-label="清空搜索">×</button>
                     </div>
+                    <p class="search-result-count" id="search-result-count"></p>
+                    <div class="posts-list" id="posts-list"></div>
                 `;
+
+                const input = document.getElementById('search-input');
+                const clearBtn = document.getElementById('search-clear');
+                const listEl = document.getElementById('posts-list');
+                const countEl = document.getElementById('search-result-count');
+
+                function renderList() {
+                    const kw = input.value;
+                    currentSearchKeyword = kw;
+                    clearBtn.classList.toggle('visible', !!kw);
+                    const items = filterArticles(kw);
+                    if (items.length === 0) {
+                        listEl.innerHTML = `
+                            <div class="empty-state">
+                                <span class="empty-icon">🔍</span>
+                                没有找到匹配「${escapeHtml(kw)}」的文章
+                            </div>
+                        `;
+                        countEl.textContent = '共 0 篇结果';
+                    } else {
+                        listEl.innerHTML = items.map((a) => renderPostCard(a, kw)).join('');
+                        if (kw) {
+                            countEl.textContent = `共 ${items.length} 篇结果`;
+                        } else {
+                            countEl.textContent = '';
+                        }
+                    }
+                }
+
+                input.addEventListener('input', renderList);
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                    renderList();
+                    input.focus();
+                });
+
+                renderList();
+
+                // 自动聚焦搜索框：仅当 URL 显式带 #/search 时
+                if (getCurrentRoute() === '/search') {
+                    input.focus();
+                }
+            }
+
+            // ========== 归档页面 ==========
+            function renderArchivesPage() {
+                updateNavActive('archives');
+                // 按日期降序（新→旧）
+                const sorted = articles.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+                // 按年份分组
+                const groups = {};
+                sorted.forEach((a) => {
+                    const year = (a.date || '未知').slice(0, 4);
+                    if (!groups[year]) groups[year] = [];
+                    groups[year].push(a);
+                });
+
+                const years = Object.keys(groups).sort((a, b) => (a < b ? 1 : -1));
+
+                // 顶部统计
+                const total = articles.length;
+                const yearCount = years.length;
+                const latest = sorted[0];
+                const summary = yearCount === 0
+                    ? '暂无文章'
+                    : `共 ${total} 篇文章 · 跨 ${yearCount} 个年份${latest ? ' · 最近更新于 ' + escapeHtml(latest.date) : ''}`;
+
+                // 年份块
+                const blocks = years.map((year) => {
+                    const items = groups[year];
+                    const list = items.map((a) => {
+                        const md = (a.date || '').slice(5); // MM-DD
+                        const tagsHtml = (a.tags || []).slice(0, 3)
+                            .map((t) => `<span class="archive-tag">#${escapeHtml(t)}</span>`)
+                            .join('');
+                        return `
+                            <li class="archive-item" onclick="navigateTo('${a.link}')" title="阅读全文">
+                                <span class="archive-date">${escapeHtml(md)}</span>
+                                <span class="archive-title">${escapeHtml(a.title)}</span>
+                                ${tagsHtml ? `<span class="archive-tags">${tagsHtml}</span>` : ''}
+                            </li>
+                        `;
+                    }).join('');
+                    return `
+                        <section class="archive-year">
+                            <div class="archive-year-header">
+                                <h2 class="archive-year-title">${escapeHtml(year)}</h2>
+                                <span class="archive-year-count">${items.length} 篇</span>
+                            </div>
+                            <ul class="archive-list">${list}</ul>
+                        </section>
+                    `;
+                }).join('');
+
+                mainContent.innerHTML = `
+                    <h1 class="page-title">归档</h1>
+                    <p class="archive-summary">${summary}</p>
+                    ${blocks || '<div class="empty-state"><span class="empty-icon">📂</span>暂无文章</div>'}
+                `;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
             function renderAboutPage() {
@@ -137,6 +319,9 @@ MBTI：INFJ<br>
                 switch (parsed.page) {
                     case 'posts':
                         renderPostsList();
+                        break;
+                    case 'archives':
+                        renderArchivesPage();
                         break;
                     case 'about':
                         renderAboutPage();

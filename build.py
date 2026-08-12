@@ -193,6 +193,17 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title} - Cusater的博客</title>
     <link rel="stylesheet" href="../style.css">
+    <script>
+        // 在样式应用前同步设置主题，避免页面加载时出现主题闪烁
+        (function() {{
+            try {{
+                var saved = localStorage.getItem('theme');
+                if (saved === 'dark') {{
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }}
+            }} catch (e) {{}}
+        }})();
+    </script>
 </head>
 <body>
 
@@ -201,12 +212,19 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
             <a class="site-title" href="../index.html" title="回到首页">
                 我的个人博客
             </a>
-            <nav>
-                <ul class="nav-links">
-                    <li><a href="../index.html">文章</a></li>
-                    <li><a href="../index.html#/about">关于</a></li>
-                </ul>
-            </nav>
+            <div class="header-right">
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="../index.html">文章</a></li>
+                        <li><a href="../index.html#/archives">归档</a></li>
+                        <li><a href="../index.html#/about">关于</a></li>
+                    </ul>
+                </nav>
+                <button id="theme-toggle" class="theme-toggle" type="button" title="切换主题" aria-label="切换主题">
+                    <span class="icon-moon">🌙</span>
+                    <span class="icon-sun">☀</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -230,6 +248,24 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     <footer class="site-footer">
         <p>© 2026 Edit by Cusater <span class="footer-heart">♥</span></p>
     </footer>
+    <script>
+        (function() {{
+            var btn = document.getElementById('theme-toggle');
+            function applyTheme(theme) {{
+                if (theme === 'dark') {{
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }} else {{
+                    document.documentElement.removeAttribute('data-theme');
+                }}
+            }}
+            btn.addEventListener('click', function() {{
+                var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                var next = isDark ? 'light' : 'dark';
+                applyTheme(next);
+                try {{ localStorage.setItem('theme', next); }} catch (e) {{}}
+            }});
+        }})();
+    </script>
 </body>
 </html>
 """
