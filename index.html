@@ -7,14 +7,16 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script>
-        // 在样式应用前同步设置主题，避免页面加载时出现主题闪烁
+    
         (function() {
             try {
                 var saved = localStorage.getItem('theme');
                 if (saved === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.log("Something wrong:",e);
+            }
         })();
     </script>
 </head>
@@ -57,8 +59,6 @@
             const navArchives = document.getElementById('nav-archives');
             const navAbout = document.getElementById('nav-about');
             const themeToggle = document.getElementById('theme-toggle');
-
-            // 保留当前搜索关键词，切回文章页时恢复
             let currentSearchKeyword = '';
 
             function getCurrentRoute() {
@@ -97,7 +97,7 @@
                 }
             }
 
-            // ========== 主题切换 ==========
+            // 算了写一句注释把
             function applyTheme(theme) {
                 if (theme === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
@@ -216,13 +216,13 @@
                 }
             }
 
-            // ========== 归档页面 ==========
+           
             function renderArchivesPage() {
                 updateNavActive('archives');
-                // 按日期降序（新→旧）
+                
                 const sorted = articles.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
-                // 按年份分组
+               
                 const groups = {};
                 sorted.forEach((a) => {
                     const year = (a.date || '未知').slice(0, 4);
@@ -232,7 +232,7 @@
 
                 const years = Object.keys(groups).sort((a, b) => (a < b ? 1 : -1));
 
-                // 顶部统计
+                
                 const total = articles.length;
                 const yearCount = years.length;
                 const latest = sorted[0];
@@ -240,7 +240,7 @@
                     ? '暂无文章'
                     : `共 ${total} 篇文章 · 跨 ${yearCount} 个年份${latest ? ' · 最近更新于 ' + escapeHtml(latest.date) : ''}`;
 
-                // 年份块
+              
                 const blocks = years.map((year) => {
                     const items = groups[year];
                     const list = items.map((a) => {
@@ -276,29 +276,18 @@
             }
 
             function renderAboutPage() {
-                updateNavActive('about');
+                updateNavActive('about'); //这一块的中文内容可以改
                 mainContent.innerHTML = `
                     <div class="about-card">
                         <img class="about-avatar" src="avatar.jpg" alt="Cusater的头像">
                         <h2 class="about-name">Cusater</h2>
                         <hr class="about-divider">
                         <div class="about-text">
-                            性别：男
-                            <br>
-年龄：15<br>
-MBTI：INFJ<br>
-身高：176cm<br>
-身材：偏瘦<br>
-性格：内向，喜欢独处<br>
 爱好：陈奕迅，打球，写小作文，写小诗，出去玩，写代码，科研<br>
-去过的地方：北京，上海，广州，珠海，阳江，惠州，深圳，澳门，广西，云南，黑龙江，吉林，辽宁，湖南，湖北，泰国，韩国，新加坡，马来西亚<br>
 喜欢的英雄：守约，墨子<br>
 科研成果:高输出低经济辅助守约，肉装守约<br>
 
 <h3>背景故事：</h3>
-这个男生今年15岁，性格内向不爱扎堆，平时更喜欢一个人待着，个子176cm，身形偏瘦。
-平时爱好特别丰富：爱听陈奕迅的歌，有空就去打球，喜欢写写随笔、小诗，也爱出门旅游，还会敲代码、研究些新奇东西。
-国内好多省份城市他都去过，还跑过泰国、韩国、新加坡、马来西亚好几个国家，见了不少世面。
 打王者荣耀就爱玩百里守约和墨子，别人玩守约大多老老实实走射手位，他偏爱琢磨不一样的套路，自己研究出两套奇葩玩法：经济不高也能打出高额伤害的辅助守约，还有堆肉装的守约，算是自己摸索出来的独门打法。
 平时不爱凑热闹，日常消遣就是听歌、运动、写点东西、出门散心、敲代码，打游戏也不爱跟风大众出装，就爱自己研究小众思路，看着安静话不多，心里想法特别多
                         </div>

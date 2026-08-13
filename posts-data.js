@@ -4,6 +4,17 @@
 const articles = [
     {
         "id": 1,
+        "title": "我要将此博客框架开源了",
+        "date": "2026-08-13",
+        "tags": [
+            "博客框架",
+            "开源"
+        ],
+        "excerpt": "从零搭建的个人博客框架，纯 Python + HTML/CSS/JS，零依赖、自动化，一键部署到 GitHub Pages",
+        "link": "articles/2026-08-13-我要将此博客框架开源了.html"
+    },
+    {
+        "id": 2,
         "title": "辅助守约的打法",
         "date": "2026-08-06",
         "tags": [

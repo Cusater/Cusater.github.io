@@ -674,6 +674,111 @@
             font-weight: 700;
             color: var(--color-strong);
         }
+        .article-body a {
+            color: var(--text-accent);
+            text-decoration: underline;
+            text-decoration-color: var(--border-card);
+            text-underline-offset: 3px;
+            text-decoration-thickness: 1px;
+            border-radius: 3px;
+            transition: all var(--transition);
+        }
+        .article-body a:hover {
+            color: var(--text-accent-hover);
+            background-color: var(--bg-accent-soft);
+            text-decoration-color: var(--text-accent);
+        }
+
+        /* ========== 文章页 上一篇/下一篇 导航 ========== */
+        .article-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 22px;
+            border-top: 1px solid var(--border-light);
+        }
+        .article-nav .nav-item {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            background-color: var(--bg-card);
+            text-decoration: none;
+            transition: all var(--transition);
+        }
+        .article-nav .nav-placeholder {
+            border: 1px dashed var(--border-light);
+            background-color: transparent;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .article-nav .nav-next {
+            text-align: right;
+            justify-content: flex-end;
+        }
+        .article-nav .nav-arrow {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            transition: all var(--transition);
+        }
+        .article-nav .nav-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .article-nav .nav-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+        .article-nav .nav-title {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color var(--transition);
+        }
+        .article-nav a.nav-item:hover {
+            border-color: var(--text-accent);
+            background-color: var(--bg-accent-soft);
+            box-shadow: var(--shadow-sm);
+        }
+        .article-nav a.nav-item:hover .nav-arrow {
+            color: var(--text-accent);
+        }
+        .article-nav a.nav-item:hover .nav-title {
+            color: var(--text-accent);
+        }
+        .article-nav .nav-prev:hover .nav-arrow {
+            transform: translateX(-3px);
+        }
+        .article-nav .nav-next:hover .nav-arrow {
+            transform: translateX(3px);
+        }
+        @media (max-width: 640px) {
+            .article-nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .article-nav .nav-next {
+                text-align: left;
+                justify-content: flex-start;
+            }
+            .article-nav .nav-title {
+                white-space: normal;
+            }
+        }
 
         /* ========== 关于页面 ========== */
         .about-card {

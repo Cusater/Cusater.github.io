@@ -19,6 +19,8 @@ build.py —— 把 posts/ 目录下的 Markdown 文章编译成独立的 HTML �
     posts-data.js          首页文章列表数据（由 index.html 读取）
 """
 
+#请不要乱动代码！！！否则博客写起来会很麻烦！！！真的！！！
+
 import os
 import re
 import json
@@ -28,7 +30,6 @@ POSTS_DIR = os.path.join(BASE, 'posts')
 OUT_DIR = os.path.join(BASE, 'articles')
 DATA_OUT = os.path.join(BASE, 'posts-data.js')
 
-# ==================== front matter 解析 ====================
 def parse_front_matter(text):
     m = re.match(r'^---\s*\n(.*?)\n---\s*\n?', text, re.S)
     if not m:
@@ -46,15 +47,12 @@ def parse_front_matter(text):
             value = value[1:-1]
         meta[key] = value
     return meta, text[m.end():]
-
-# ==================== HTML 转义（防注入） ====================
 def esc(s):
     return (s.replace('&', '&amp;')
              .replace('<', '&lt;')
              .replace('>', '&gt;')
              .replace('"', '&quot;'))
 
-# ==================== 行内语法 ====================
 def inline(s):
     s = esc(s)
     s = re.sub(r'!\[([^\]]*)\]\(([^)\s]+)\)',
@@ -68,7 +66,6 @@ def inline(s):
     s = re.sub(r'(^|[^_])_([^_\n]+)_(?!_)', r'\1<em>\2</em>', s)
     return s
 
-# ==================== Markdown → HTML ====================
 def render_markdown(md):
     lines = md.replace('\r\n', '\n').split('\n')
     html = []
@@ -93,7 +90,7 @@ def render_markdown(md):
         line = lines[i]
         t = line.strip()
 
-        # 代码块
+        
         if t.startswith('```'):
             if not in_code:
                 in_code = True
@@ -107,15 +104,11 @@ def render_markdown(md):
             code_buf.append(line)
             i += 1
             continue
-
-        # 空行
         if t == '':
             flush_quote()
             flush_list()
             i += 1
             continue
-
-        # 标题
         h = re.match(r'^(#{1,3})\s+(.*)$', t)
         if h:
             flush_quote()
@@ -124,15 +117,11 @@ def render_markdown(md):
             html.append('<h%d>%s</h%d>' % (level, inline(h.group(2)), level))
             i += 1
             continue
-
-        # 引用
         if t.startswith('>'):
             flush_list()
             quote_buf.append(re.sub(r'^>\s?', '', t))
             i += 1
             continue
-
-        # 无序列表
         ul = re.match(r'^[-*]\s+(.*)$', t)
         if ul:
             flush_quote()
@@ -143,8 +132,6 @@ def render_markdown(md):
             html.append('<li>' + inline(ul.group(1)) + '</li>')
             i += 1
             continue
-
-        # 有序列表
         ol = re.match(r'^\d+\.\s+(.*)$', t)
         if ol:
             flush_quote()
@@ -155,16 +142,12 @@ def render_markdown(md):
             html.append('<li>' + inline(ol.group(1)) + '</li>')
             i += 1
             continue
-
-        # 分隔线
         if re.match(r'^(-{3,}|\*{3,})$', t):
             flush_quote()
             flush_list()
             html.append('<hr>')
             i += 1
             continue
-
-        # 普通段落（合并连续行）
         flush_quote()
         flush_list()
         para = [t]
@@ -177,15 +160,14 @@ def render_markdown(md):
                 break
             para.append(nt)
             i += 1
-        html.append('<p>' + inline('<br>'.join(para)) + '</p>')
+        html.append('<p>' + '<br>'.join(inline(l) for l in para) + '</p>')
 
     flush_quote()
     flush_list()
     if in_code:
         html.append('<pre><code>' + esc('\n'.join(code_buf)) + '</code></pre>')
     return '\n'.join(html)
-
-# ==================== 文章页 HTML 模板 ====================
+#176行的Cusater可以改 194行“我的个人博客”可以改
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -194,7 +176,6 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     <title>{title} - Cusater的博客</title>
     <link rel="stylesheet" href="../style.css">
     <script>
-        // 在样式应用前同步设置主题，避免页面加载时出现主题闪烁
         (function() {{
             try {{
                 var saved = localStorage.getItem('theme');
@@ -242,6 +223,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
             <div class="article-body">
                 {content}
             </div>
+            {nav_html}
         </article>
     </main>
 
@@ -271,23 +253,47 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 """
 
 def slugify(name):
-    """把文件名去掉 .md 后缀作为页面名（保留中文，直观）"""
     return name[:-3] if name.endswith('.md') else name
 
 def make_tags_html(tags):
     return ''.join('<span class="article-tag">#%s</span>' % esc(t) for t in tags)
 
-def build_article_page(article, out_file):
+def build_article_page(article, out_file, prev=None, nxt=None):
+    nav_parts = ['<nav class="article-nav">']
+    if prev:
+        prev_slug = slugify(prev['file'])
+        nav_parts.append(
+            '<a class="nav-item nav-prev" href="%s.html">'
+            '<span class="nav-arrow">←</span>'
+            '<span class="nav-text"><span class="nav-label">上一篇</span>'
+            '<span class="nav-title">%s</span></span></a>'
+            % (esc(prev_slug), esc(prev['title']))
+        )
+    else:
+        nav_parts.append('<span class="nav-item nav-placeholder"></span>')
+    if nxt:
+        nxt_slug = slugify(nxt['file'])
+        nav_parts.append(
+            '<a class="nav-item nav-next" href="%s.html">'
+            '<span class="nav-text"><span class="nav-label">下一篇</span>'
+            '<span class="nav-title">%s</span></span>'
+            '<span class="nav-arrow">→</span></a>'
+            % (esc(nxt_slug), esc(nxt['title']))
+        )
+    else:
+        nav_parts.append('<span class="nav-item nav-placeholder"></span>')
+    nav_parts.append('</nav>')
+    nav_html = ''.join(nav_parts)
+
     page = PAGE_TEMPLATE.format(
         title=esc(article['title']),
         date=esc(article['date']),
         tags_html=make_tags_html(article['tags']),
         content=article['content'],
+        nav_html=nav_html,
     )
     with open(out_file, 'w', encoding='utf-8') as f:
         f.write(page)
-
-# ==================== 首页数据 ====================
 def build_data_js(articles):
     lines = [
         '// 本文件由 build.py 自动生成，请勿手动修改。',
@@ -298,8 +304,6 @@ def build_data_js(articles):
     ]
     with open(DATA_OUT, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
-
-# ==================== 主流程 ====================
 def main():
     if not os.path.isdir(POSTS_DIR):
         print('未找到 posts 目录，请确认目录结构正确')
@@ -324,14 +328,11 @@ def main():
             'excerpt': meta.get('excerpt', ''),
             'content': render_markdown(body.strip()),
         })
-
-    # 按日期排序（同日期按文件名），重新分配 id 并生成文章页
-    records.sort(key=lambda a: (a['date'], a['file']))
+    records.sort(key=lambda a: (a['date'], a['file']), reverse=True)
     articles = []
     for idx, a in enumerate(records, 1):
         slug = slugify(a['file'])
         link = 'articles/' + slug + '.html'
-        build_article_page(a, os.path.join(OUT_DIR, slug + '.html'))
         articles.append({
             'id': idx,
             'title': a['title'],
@@ -340,12 +341,19 @@ def main():
             'excerpt': a['excerpt'],
             'link': link,
         })
+    total = len(records)
+    for i, a in enumerate(records):
+        slug = slugify(a['file'])
+        out_file = os.path.join(OUT_DIR, slug + '.html')
+        prev = records[i - 1] if i - 1 >= 0 else None
+        nxt = records[i + 1] if i + 1 < total else None
+        build_article_page(a, out_file, prev, nxt)
 
     build_data_js(articles)
-    print('✔ 已生成 %d 篇文章页面到 articles/ 目录' % len(articles))
+    print('已生成 %d 篇文章页面到 articles/ 目录' % len(articles))
     for a in articles:
         print('   - %s (%s)' % (a['title'], a['link']))
-    print('✔ 已更新 ' + DATA_OUT)
+    print('已更新 ' + DATA_OUT)
 
 if __name__ == '__main__':
     main()

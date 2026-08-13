@@ -1,0 +1,62 @@
+# ============================================
+# Cusater 博客框架 .gitignore
+# Python / 编辑器 / 系统 临时文件，不要提交
+# ============================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.Python
+pyvenv.cfg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 虚拟环境（如果将来用 venv / virtualenv）
+.venv/
+venv/
+ENV/
+env/
+
+# ---------- 编辑器 & IDE ----------
+# VS Code 工作区个人设置（.vscode/settings.json 等共享配置保留）
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- 操作系统 ----------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# ---------- 本地预览 & 日志 ----------
+*.log
+*.bak
+*.tmp
+.nohup
